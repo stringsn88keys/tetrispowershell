@@ -621,38 +621,32 @@ using System.Windows.Forms;
 public class TetrisPanel : Panel {
     public TetrisPanel() { DoubleBuffered = true; TabStop = false; }
 }
-"@ -ReferencedAssemblies $wfPath, $drwPath
+"@ -ReferencedAssemblies $wfPath, $drwPath -WarningAction SilentlyContinue
 }
 
-# TetrisAppForm overrides WndProc to intercept WM_KEYDOWN directly on the
-# form's own HWND.  This is the most direct keyboard capture method: when the
-# form HWND has Win32 keyboard focus, Windows delivers WM_KEYDOWN straight here
-# — no WinForms routing, no KeyPreview, no IMessageFilter indirection.
-if (-not ([System.Management.Automation.PSTypeName]'TetrisInputFilter').Type) {
+if (-not ([System.Management.Automation.PSTypeName]'TetrisKeyFilter').Type) {
     Add-Type -TypeDefinition @"
 using System.Windows.Forms;
-// Plain form subclass.  FireKeyDown is a public method so TetrisInputFilter can
-// call it without needing a custom event (avoids PowerShell delegate bridging).
+// Plain form subclass.  FireKeyDown lets TetrisKeyFilter raise KeyDown without
+// needing a custom event (avoids PowerShell delegate-bridging issues).
 public class TetrisGame : Form {
     public string GameTitle { get { return "Tetris"; } }
     public void FireKeyDown(Keys k) { OnKeyDown(new KeyEventArgs(k)); }
 }
-// Application-level message filter: sees every WM_KEYDOWN before any control's
-// WndProc, regardless of which child has Win32 focus.
-public class TetrisInputFilter : IMessageFilter {
+// Application-level message filter — intercepts WM_KEYDOWN before any control.
+// Suppressed while a modal dialog is open (_form.Enabled == false).
+public class TetrisKeyFilter : IMessageFilter {
     private TetrisGame _form;
-    public static int HitCount = 0;
-    public TetrisInputFilter(TetrisGame f) { _form = f; }
+    public TetrisKeyFilter(TetrisGame f) { _form = f; }
     public bool PreFilterMessage(ref Message m) {
-        if (m.Msg == 0x0100) {
-            HitCount++;
+        if (m.Msg == 0x0100 && _form.Enabled) {
             Keys k = (Keys)(int)m.WParam & Keys.KeyCode;
             switch (k) {
                 case Keys.Left:  case Keys.Right: case Keys.Up:   case Keys.Down:
                 case Keys.Space: case Keys.Z:     case Keys.P:    case Keys.N:
                 case Keys.S:
                     _form.FireKeyDown(k);
-                    return true;   // consumed — no child control or button sees it
+                    return true;
             }
         }
         return false;
@@ -1035,7 +1029,7 @@ $form.Add_KeyDown({
     }
 })
 
-$script:keyFilter = [TetrisInputFilter]::new($form)
+$script:keyFilter = [TetrisKeyFilter]::new($form)
 [System.Windows.Forms.Application]::AddMessageFilter($script:keyFilter)
 $form.Add_FormClosed({ [System.Windows.Forms.Application]::RemoveMessageFilter($script:keyFilter) })
 

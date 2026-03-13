@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(powershell -ExecutionPolicy Bypass -File Tetris.Tests.ps1 2>&1)"
+      "Bash(powershell -ExecutionPolicy Bypass -File Tetris.Tests.ps1 2>&1)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:/stringsn88keys/tetrispowershell/capture.ps1\")"
     ]
   }
 }
