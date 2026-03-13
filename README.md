@@ -34,14 +34,32 @@ powershell -ExecutionPolicy Bypass -File Tetris.ps1
 
 ## Scoring
 
-| Lines cleared | Points (× level) |
-|--------------|-----------------|
-| 1 | 100 |
-| 2 | 300 |
-| 3 | 500 |
-| 4 (Tetris) | 800 |
+### Line clears (× level)
 
-Soft drop awards 1 point per row; hard drop awards 2 points per row.
+| Clear | Points |
+|-------|--------|
+| Single | 100 |
+| Double | 300 |
+| Triple | 500 |
+| Tetris | 800 |
+
+### T-Spins (× level)
+
+| Clear | Full T-Spin | Mini T-Spin |
+|-------|-------------|-------------|
+| 0 lines | 400 | 100 |
+| 1 line | 800 | 200 |
+| 2 lines | 1200 | 400 |
+| 3 lines | 1600 | — |
+
+### Bonuses
+
+- **Soft drop:** +1 pt per row
+- **Hard drop:** +2 pts per row
+- **Back-to-Back:** ×1.5 on consecutive difficult clears (Tetris or T-Spin line clear)
+- **Combo:** +50 × combo count × level for each consecutive line clear (starts on 2nd clear)
+- **No Ghost piece:** +50% to line clear score
+- **Hide Next piece:** +25% to line clear score
 
 A new level is reached every 10 lines. Speed increases with each level up to level 11.
 
