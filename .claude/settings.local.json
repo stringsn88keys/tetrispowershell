@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -ExecutionPolicy Bypass -File Tetris.Tests.ps1 2>&1)"
+    ]
+  }
+}
