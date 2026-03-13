@@ -2,6 +2,10 @@
 
 Classic Tetris clone built with PowerShell, Windows Forms, and GDI+.
 
+![Gameplay](screenshots/gameplay.png)
+
+---
+
 ## Requirements
 
 - Windows
@@ -26,6 +30,8 @@ powershell -ExecutionPolicy Bypass -File Tetris.ps1
 | N | New game |
 | S | Settings |
 
+![Paused](screenshots/paused.png)
+
 ## Scoring
 
 | Lines cleared | Points (× level) |
@@ -42,6 +48,8 @@ A new level is reached every 10 lines. Speed increases with each level up to lev
 ## Settings
 
 Press **S** or click the Settings button to adjust board width (6–16 columns), board height (10–30 rows), and starting level (1–11). Changes take effect on the next new game.
+
+![Settings](screenshots/settings.png)
 
 ## Running Tests
 
