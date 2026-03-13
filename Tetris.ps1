@@ -118,6 +118,7 @@ $script:PIECE_DATA = @(
 )
 
 # Score table: LINE_SCORES[n] * level  (n = lines cleared at once, 0-4)
+# T-Spin and Mini T-Spin scores are handled separately in AddScore.
 $script:LINE_SCORES = @(0, 100, 300, 500, 800)
 
 # Gravity interval (ms per tick) per level; index = level-1, clamped at 10
@@ -136,18 +137,21 @@ $script:HIDE_NEXT   = $false  # hide next-piece preview (+25% line score bonus)
 # ------------------------------------------------------------------
 #  GAME STATE
 # ------------------------------------------------------------------
-$script:board     = $null  # int[,] ROWS x COLS
-$script:score     = 0
-$script:level     = 1
-$script:lines     = 0
-$script:curType   = 0      # current piece type 0-6
-$script:curRot    = 0      # current rotation 0-3
-$script:curRow    = 0      # origin row
-$script:curCol    = 0      # origin col
-$script:nextType  = 0      # next piece type
-$script:gameOver  = $false
-$script:paused    = $false
-$script:gameTimer = $null  # System.Windows.Forms.Timer (set in UI section)
+$script:board          = $null   # int[,] ROWS x COLS
+$script:score          = 0
+$script:level          = 1
+$script:lines          = 0
+$script:combo          = -1     # combo counter; -1 = inactive, 0 = first clear (no bonus)
+$script:b2b            = $false # back-to-back difficult clear streak
+$script:lastWasRotate  = $false # true if last successful action was a rotation (for T-Spin)
+$script:curType        = 0      # current piece type 0-6
+$script:curRot         = 0      # current rotation 0-3
+$script:curRow         = 0      # origin row
+$script:curCol         = 0      # origin col
+$script:nextType       = 0      # next piece type
+$script:gameOver       = $false
+$script:paused         = $false
+$script:gameTimer      = $null  # System.Windows.Forms.Timer (set in UI section)
 
 # ------------------------------------------------------------------
 #  HELPERS
@@ -187,11 +191,12 @@ function script:IsValid([int[]]$cells) {
 
 # Advance nextType -> curType; pick a new nextType
 function script:SpawnPiece {
-    $script:curType  = $script:nextType
-    $script:curRot   = 0
-    $script:curRow   = 0
-    $script:curCol   = [Math]::Floor(($script:COLS - 4) / 2)
-    $script:nextType = Get-Random -Minimum 0 -Maximum 7
+    $script:curType       = $script:nextType
+    $script:curRot        = 0
+    $script:curRow        = 0
+    $script:curCol        = [Math]::Floor(($script:COLS - 4) / 2)
+    $script:nextType      = Get-Random -Minimum 0 -Maximum 7
+    $script:lastWasRotate = $false
 }
 
 # Stamp the current piece colour onto the board
@@ -245,15 +250,59 @@ function script:ClearLines {
     return $cleared
 }
 
-# Add points, track lines, level up if needed, adjust timer interval.
+# Add points, track lines/combo/B2B, level up if needed, adjust timer interval.
+# tSpinType: 'Full' | 'Mini' | 'None'  (from GetTSpinType before locking)
 # Line scores are boosted +50% when NO_GHOST and +25% when HIDE_NEXT.
-function script:AddScore([int]$linesCleared, [int]$softRows, [int]$hardRows) {
-    $lineScore = $script:LINE_SCORES[$linesCleared] * $script:level
+function script:AddScore([int]$linesCleared, [int]$softRows, [int]$hardRows, [string]$tSpinType = 'None') {
+    # Determine base score and whether this qualifies as a difficult clear.
+    $baseScore   = 0
+    $isDifficult = $false
+    if ($tSpinType -eq 'Full') {
+        switch ($linesCleared) {
+            0 { $baseScore = 400 }
+            1 { $baseScore = 800;  $isDifficult = $true }
+            2 { $baseScore = 1200; $isDifficult = $true }
+            3 { $baseScore = 1600; $isDifficult = $true }
+        }
+    } elseif ($tSpinType -eq 'Mini') {
+        switch ($linesCleared) {
+            0 { $baseScore = 100 }
+            1 { $baseScore = 200; $isDifficult = $true }
+            2 { $baseScore = 400; $isDifficult = $true }
+        }
+    } else {
+        $baseScore = $script:LINE_SCORES[$linesCleared]
+        if ($linesCleared -eq 4) { $isDifficult = $true }
+    }
+
+    $lineScore = $baseScore * $script:level
+
+    # Back-to-Back: consecutive difficult line clears get 1.5x multiplier.
+    # B2B state only changes when lines are actually cleared.
+    if ($linesCleared -gt 0) {
+        if ($isDifficult) {
+            if ($script:b2b) { $lineScore = [int]($lineScore * 1.5) }
+            $script:b2b = $true
+        } else {
+            $script:b2b = $false
+        }
+    }
+
+    # Combo: +50 * combo * level for each consecutive line clear (bonus starts on 2nd clear).
+    if ($linesCleared -gt 0) {
+        $script:combo++
+        if ($script:combo -gt 0) { $lineScore += 50 * $script:combo * $script:level }
+    } else {
+        $script:combo = -1
+    }
+
     if ($script:NO_GHOST)  { $lineScore = [int]($lineScore * 1.5) }
     if ($script:HIDE_NEXT) { $lineScore = [int]($lineScore * 1.25) }
+
     $script:score += $lineScore
     $script:score += $softRows
     $script:score += $hardRows * 2
+
     $script:lines += $linesCleared
     $newLevel = $script:START_LEVEL + [Math]::Floor($script:lines / 10)
     if ($newLevel -gt $script:level) {
@@ -271,6 +320,7 @@ function script:TryMove([int]$dRow, [int]$dCol) {
     if (script:IsValid $cells) {
         $script:curRow += $dRow
         $script:curCol += $dCol
+        $script:lastWasRotate = $false
         return $true
     }
     return $false
@@ -283,6 +333,7 @@ function script:TryRotate([int]$dir) {
     $cells  = script:GetCells $script:curType $newRot $script:curRow $script:curCol
     if (script:IsValid $cells) {
         $script:curRot = $newRot
+        $script:lastWasRotate = $true
         return $true
     }
     # Wall-kick: try column offsets -1, +1, -2, +2
@@ -291,6 +342,7 @@ function script:TryRotate([int]$dir) {
         if (script:IsValid $cells) {
             $script:curRot  = $newRot
             $script:curCol += $dc
+            $script:lastWasRotate = $true
             return $true
         }
     }
@@ -303,6 +355,39 @@ function script:DoHardDrop {
     $dropped = 0
     while (script:TryMove 1 0) { $dropped++ }
     return $dropped
+}
+
+# Returns $true if board position (r,c) is occupied (out-of-bounds counts as occupied).
+function script:IsCornerOccupied([int]$r, [int]$c) {
+    if ($r -lt 0 -or $r -ge $script:ROWS -or $c -lt 0 -or $c -ge $script:COLS) { return $true }
+    return $script:board[$r, $c] -ne $script:EMPTY
+}
+
+# Returns 'Full', 'Mini', or 'None' for the current piece position.
+# Only meaningful for T-piece (type 2) when lastWasRotate is $true.
+function script:GetTSpinType {
+    if ($script:curType -ne 2)          { return 'None' }
+    if (-not $script:lastWasRotate)     { return 'None' }
+
+    $r  = $script:curRow
+    $c  = $script:curCol
+    $tl = script:IsCornerOccupied $r       $c
+    $tr = script:IsCornerOccupied $r       ($c + 2)
+    $bl = script:IsCornerOccupied ($r + 2) $c
+    $br = script:IsCornerOccupied ($r + 2) ($c + 2)
+    $total = ([int]$tl + [int]$tr + [int]$bl + [int]$br)
+
+    if ($total -ge 3) { return 'Full' }
+    if ($total -lt 2) { return 'None' }
+    # Exactly 2: Mini T-Spin only if both front corners are the occupied ones.
+    # Front corners by rotation: 0=TL+TR, 1=TR+BR, 2=BL+BR, 3=TL+BL
+    switch ($script:curRot) {
+        0 { if ($tl -and $tr) { return 'Mini' } }
+        1 { if ($tr -and $br) { return 'Mini' } }
+        2 { if ($bl -and $br) { return 'Mini' } }
+        3 { if ($tl -and $bl) { return 'Mini' } }
+    }
+    return 'None'
 }
 
 # ------------------------------------------------------------------
@@ -750,9 +835,10 @@ $script:UpdateHint = {
 
 # Lock piece, clear lines, score, spawn next; returns $false if game over
 $script:LockAndSpawn = {
+    $tSpin = script:GetTSpinType   # detect before locking (board still clear of this piece)
     script:LockPiece
     $n = script:ClearLines
-    script:AddScore $n 0 0
+    script:AddScore $n 0 0 $tSpin
     script:SpawnPiece
     $chk = script:GetCells $script:curType $script:curRot $script:curRow $script:curCol
     if (-not (script:IsValid $chk)) {
@@ -781,11 +867,14 @@ $script:StartNewGame = {
             $script:board[$r, $c] = $script:EMPTY
         }
     }
-    $script:score    = 0
-    $script:level    = $script:START_LEVEL
-    $script:lines    = 0
-    $script:gameOver = $false
-    $script:paused   = $false
+    $script:score         = 0
+    $script:level         = $script:START_LEVEL
+    $script:lines         = 0
+    $script:combo         = -1
+    $script:b2b           = $false
+    $script:lastWasRotate = $false
+    $script:gameOver      = $false
+    $script:paused        = $false
     $script:nextType = Get-Random -Minimum 0 -Maximum 7
     script:SpawnPiece
     $script:gameTimer.Stop()

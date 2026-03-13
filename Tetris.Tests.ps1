@@ -353,64 +353,185 @@ Describe "ClearLines" {
 # ---- 5. AddScore -------------------------------------------
 Describe "AddScore - line scoring" {
     It "0 lines at level 1: +0 pts" {
-        $script:score = 0; $script:level = 1; $script:lines = 0
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 1
         script:AddScore 0 0 0
         Should-Be $script:score 0
     }
     It "1 line at level 1: +100 pts" {
-        $script:score = 0; $script:level = 1; $script:lines = 0
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 1
         script:AddScore 1 0 0
         Should-Be $script:score 100
     }
     It "2 lines at level 1: +300 pts" {
-        $script:score = 0; $script:level = 1; $script:lines = 0
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 1
         script:AddScore 2 0 0
         Should-Be $script:score 300
     }
     It "3 lines at level 1: +500 pts" {
-        $script:score = 0; $script:level = 1; $script:lines = 0
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 1
         script:AddScore 3 0 0
         Should-Be $script:score 500
     }
     It "4 lines (Tetris) at level 1: +800 pts" {
-        $script:score = 0; $script:level = 1; $script:lines = 0
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 1
         script:AddScore 4 0 0
         Should-Be $script:score 800
     }
     It "1 line at level 2: +200 pts" {
-        $script:score = 0; $script:level = 2; $script:lines = 0
+        $script:score = 0; $script:level = 2; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 2
         script:AddScore 1 0 0
         Should-Be $script:score 200
     }
     It "4 lines at level 2: +1600 pts" {
-        $script:score = 0; $script:level = 2; $script:lines = 0
+        $script:score = 0; $script:level = 2; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 2
         script:AddScore 4 0 0
         Should-Be $script:score 1600
     }
     It "Soft drop 5 rows: +5 pts" {
-        $script:score = 0; $script:level = 1; $script:lines = 0
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 1
         script:AddScore 0 5 0
         Should-Be $script:score 5
     }
     It "Hard drop 8 rows: +16 pts" {
-        $script:score = 0; $script:level = 1; $script:lines = 0
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 1
         script:AddScore 0 0 8
         Should-Be $script:score 16
     }
 }
 
+Describe "AddScore - T-Spin scoring" {
+    It "T-Spin no lines (Full, 0 cleared) at level 1: +400 pts" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 0 0 0 'Full'
+        Should-Be $script:score 400
+    }
+    It "T-Spin Single (Full, 1 line) at level 1: +800 pts" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 1 0 0 'Full'
+        Should-Be $script:score 800
+    }
+    It "T-Spin Double (Full, 2 lines) at level 1: +1200 pts" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 2 0 0 'Full'
+        Should-Be $script:score 1200
+    }
+    It "T-Spin Triple (Full, 3 lines) at level 1: +1600 pts" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 3 0 0 'Full'
+        Should-Be $script:score 1600
+    }
+    It "Mini T-Spin no lines (Mini, 0 cleared) at level 1: +100 pts" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 0 0 0 'Mini'
+        Should-Be $script:score 100
+    }
+    It "Mini T-Spin Single (Mini, 1 line) at level 1: +200 pts" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 1 0 0 'Mini'
+        Should-Be $script:score 200
+    }
+    It "Mini T-Spin Double (Mini, 2 lines) at level 1: +400 pts" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 2 0 0 'Mini'
+        Should-Be $script:score 400
+    }
+    It "T-Spin Single at level 2: +1600 pts" {
+        $script:score = 0; $script:level = 2; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 2
+        script:AddScore 1 0 0 'Full'
+        Should-Be $script:score 1600
+    }
+}
+
+Describe "AddScore - Back-to-Back" {
+    It "Tetris then Tetris: second gets 1.5x (800 + 1200 = 2000)" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 4 0 0          # first Tetris, no B2B yet -> 800; combo: -1->0
+        $script:combo = -1             # reset combo to isolate B2B test
+        script:AddScore 4 0 0          # second Tetris, B2B -> 800*1.5 = 1200; combo: -1->0
+        Should-Be $script:score 2000
+    }
+    It "Tetris then Single breaks B2B: Single scores 100 (no 1.5x)" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 4 0 0          # first Tetris -> 800, b2b=true; combo: -1->0
+        $script:score = 0; $script:combo = -1   # reset to isolate
+        script:AddScore 1 0 0          # single breaks B2B -> 100, no 1.5x; combo: -1->0
+        Should-Be $script:score 100
+        Should-Be $script:b2b $false
+    }
+    It "T-Spin Single then T-Spin Single: B2B applies (800 + 1200 = 2000)" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 1 0 0 'Full'   # 800, b2b=true; combo: -1->0
+        $script:combo = -1             # reset combo to isolate B2B test
+        script:AddScore 1 0 0 'Full'   # 800*1.5=1200; combo: -1->0
+        Should-Be $script:score 2000
+    }
+    It "T-Spin no lines does not affect B2B state" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $true
+        $script:START_LEVEL = 1
+        script:AddScore 0 0 0 'Full'   # T-Spin no lines: 400, b2b unchanged (no lines cleared)
+        Should-Be $script:b2b $true
+    }
+}
+
+Describe "AddScore - Combo" {
+    It "First clear: no combo bonus (combo=0 after)" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 1 0 0
+        Should-Be $script:score 100
+        Should-Be $script:combo 0
+    }
+    It "Second consecutive clear: combo bonus = 50*1*level" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = 0; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 1 0 0   # 100 + 50*1*1 = 150
+        Should-Be $script:score 150
+        Should-Be $script:combo 1
+    }
+    It "Third consecutive clear: combo bonus = 50*2*level" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = 1; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 1 0 0   # 100 + 50*2*1 = 200
+        Should-Be $script:score 200
+        Should-Be $script:combo 2
+    }
+    It "No lines clears resets combo to -1" {
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = 3; $script:b2b = $false
+        $script:START_LEVEL = 1
+        script:AddScore 0 0 0
+        Should-Be $script:combo (-1)
+    }
+    It "Combo at level 2: bonus = 50*1*2 = 100" {
+        $script:score = 0; $script:level = 2; $script:lines = 0; $script:combo = 0; $script:b2b = $false
+        $script:START_LEVEL = 2
+        script:AddScore 1 0 0   # 200 + 50*1*2 = 300
+        Should-Be $script:score 300
+    }
+}
+
 Describe "AddScore - level progression" {
     It "10 lines cleared -> level increases from 1 to 2" {
-        $script:score = 0; $script:level = 1; $script:lines = 0
+        $script:score = 0; $script:level = 1; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 1
         script:AddScore 0 0 0   # no change
         Should-Be $script:level 1
@@ -419,25 +540,25 @@ Describe "AddScore - level progression" {
         Should-Be $script:level 2
     }
     It "20 lines cleared -> level 3 from START_LEVEL 1" {
-        $script:score = 0; $script:level = 1; $script:lines = 19
+        $script:score = 0; $script:level = 1; $script:lines = 19; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 1
         script:AddScore 1 0 0
         Should-Be $script:level 3
     }
     It "Level does not decrease when lines counter is just below threshold" {
-        $script:score = 0; $script:level = 3; $script:lines = 15
+        $script:score = 0; $script:level = 3; $script:lines = 15; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 1
         script:AddScore 0 0 0
         Should-Be $script:level 3
     }
     It "START_LEVEL=5, 0 lines: stays at level 5" {
-        $script:score = 0; $script:level = 5; $script:lines = 0
+        $script:score = 0; $script:level = 5; $script:lines = 0; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 5
         script:AddScore 0 0 0
         Should-Be $script:level 5
     }
     It "START_LEVEL=5, 10 lines: level advances to 6" {
-        $script:score = 0; $script:level = 5; $script:lines = 9
+        $script:score = 0; $script:level = 5; $script:lines = 9; $script:combo = -1; $script:b2b = $false
         $script:START_LEVEL = 5
         script:AddScore 1 0 0
         Should-Be $script:level 6
@@ -671,7 +792,73 @@ Describe "Spawn position" {
     }
 }
 
-# ---- 12. LINE_SCORES and LEVEL_SPEEDS constants -------------
+# ---- 12. GetTSpinType -----------------------------------------
+Describe "GetTSpinType" {
+    It "Returns 'None' for non-T piece" {
+        New-EmptyBoard
+        SetPiece 0 0 5 3   # I piece
+        $script:lastWasRotate = $true
+        Should-Be (script:GetTSpinType) 'None'
+    }
+    It "Returns 'None' when last action was not rotation" {
+        New-EmptyBoard
+        SetPiece 2 0 5 3   # T piece
+        $script:lastWasRotate = $false
+        Should-Be (script:GetTSpinType) 'None'
+    }
+    It "Returns 'Full' when 3 corners occupied (bottom-left, top-right, bottom-right)" {
+        New-EmptyBoard
+        # T piece at row=5, col=3, rot=0 -> bounding box corners: (5,3),(5,5),(7,3),(7,5)
+        SetPiece 2 0 5 3
+        $script:lastWasRotate = $true
+        SetCell 5 5 0   # top-right
+        SetCell 7 3 0   # bottom-left
+        SetCell 7 5 0   # bottom-right
+        Should-Be (script:GetTSpinType) 'Full'
+    }
+    It "Returns 'Full' when all 4 corners occupied" {
+        New-EmptyBoard
+        SetPiece 2 0 5 3
+        $script:lastWasRotate = $true
+        SetCell 5 3 0; SetCell 5 5 0; SetCell 7 3 0; SetCell 7 5 0
+        Should-Be (script:GetTSpinType) 'Full'
+    }
+    It "Returns 'Mini' when both front corners occupied (rot=0: TL+TR)" {
+        New-EmptyBoard
+        # T rot=0 points up; front = TL(5,3) + TR(5,5)
+        SetPiece 2 0 5 3
+        $script:lastWasRotate = $true
+        SetCell 5 3 0   # top-left
+        SetCell 5 5 0   # top-right
+        Should-Be (script:GetTSpinType) 'Mini'
+    }
+    It "Returns 'None' when only back corners occupied (rot=0: BL+BR)" {
+        New-EmptyBoard
+        SetPiece 2 0 5 3
+        $script:lastWasRotate = $true
+        SetCell 7 3 0   # bottom-left (back)
+        SetCell 7 5 0   # bottom-right (back)
+        Should-Be (script:GetTSpinType) 'None'
+    }
+    It "Returns 'None' when fewer than 2 corners occupied" {
+        New-EmptyBoard
+        SetPiece 2 0 5 3
+        $script:lastWasRotate = $true
+        SetCell 5 3 0   # only 1 corner
+        Should-Be (script:GetTSpinType) 'None'
+    }
+    It "Returns 'Mini' for rot=1 (right-pointing): front = TR+BR" {
+        New-EmptyBoard
+        # T rot=1 at row=5, col=3: front corners = TR(5,5) and BR(7,5)
+        SetPiece 2 1 5 3
+        $script:lastWasRotate = $true
+        SetCell 5 5 0   # TR
+        SetCell 7 5 0   # BR
+        Should-Be (script:GetTSpinType) 'Mini'
+    }
+}
+
+# ---- 13. LINE_SCORES and LEVEL_SPEEDS constants -------------
 Describe "Constants" {
     It "LINE_SCORES has 5 entries (index 0-4)" {
         Should-Be $script:LINE_SCORES.Count 5
